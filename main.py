@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 
-
 def main() -> None:
     df = pd.read_pickle('data_clean.pkl')
     shape = df.shape
@@ -19,6 +18,8 @@ def main() -> None:
     print(f'File Path : \n {df.loc[code_line]["file_path"]}')
     print(f'Code : \n {df.loc[code_line]["code"]}')
     print(f'Diff : \n {df.loc[code_line]["diff"]}')
+
+    # Parse dataframe here
 
 
 if __name__ == '__main__':
