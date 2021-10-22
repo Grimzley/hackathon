@@ -65,6 +65,7 @@ def diff_check(input_string) -> list:
     ret_val.append(times_added)
     return ret_val
 
+
 def frequency(data):
     dictionary = []
     body = data['body']
@@ -88,10 +89,10 @@ def frequency(data):
             word_count[word][index] += 1
     return word_count
 
+
 def main() -> None:
     df = pd.read_pickle('data_clean.pkl')
     shape = df.shape
-    #print(shape)
     df['index'] = range(shape[0])
     df = df.set_index('index')
     df = df.drop('pullrequest_id', 1)
@@ -110,15 +111,9 @@ def main() -> None:
     diff = diff_check(input_string=df.loc[code_line]["diff"])
     if DEBUG: print(diff)
     
-    code_line = 72  # change this
-    print(f'ORIGINAL HASH : \n {df.loc[code_line]["original_commit_hash"]}')
-    print(f'POST MERGE HASH : \n {df.loc[code_line]["post_merge_hash"]}')
-    print(f'Body : \n {df.loc[code_line]["body"]}')
-    print(f'File Path : \n {df.loc[code_line]["file_path"]}')
-    print(f'Code : \n {df.loc[code_line]["code"]}')
-    print(f'Diff : \n {df.loc[code_line]["diff"]}')
-    
     word_count = frequency(df)
+    print(sum(word_count['the']))
+
 
 if __name__ == '__main__':
     main()
