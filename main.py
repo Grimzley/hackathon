@@ -4,6 +4,7 @@ import re
 import random
 import collections
 import matplotlib.pyplot as plt
+import math
 
 LEGAL_CHARACTERS_NUMBERS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 DIFF_SEP = ','
@@ -86,7 +87,7 @@ def weighted_word_frequency(data):
     # clean data
     for index, message in enumerate(body):
         message = message.lower()
-        message = re.sub(r'[^a-z0-9]', ' ',message)
+        message = re.sub(r'[^a-z]', ' ', message)
         message = message.split()
         body[index] = message
     
@@ -106,16 +107,23 @@ def weighted_word_frequency(data):
         for word in message:
             dictionary.append(word)
     dictionary = list(set(dictionary)) # remove duplicate words
-    
+
     # count the number of occurences of each word in each body message and add weights
-    word_count = {word: [0] * len(body) for word in dictionary} # initialize word counts to 0
-    weighted_word_count = {word: [0] * len(body) for word in dictionary} # initialize weight counts to 0
+    word_count = {word: [0] * len(body) for word in dictionary}  # initialize word counts to 0
+    weighted_word_count = {word: [0] * len(body) for word in dictionary}  # initialize weight counts to 0
     for index, message in enumerate(body):
         for word in message:
             word_count[word][index] += 1
             weighted_word_count[word][index] += diff[index]
     
     weighted_word_count = {word: sum(weighted_word_count[word]) / sum(word_count[word]) for word in dictionary}
+    median_diff = diff[math.floor(len(diff)/2) + 1]
+    print(median_diff)
+    result = []
+    for i in diff:
+        result.append(1 / (1 + math.e ** ((-0.1) * (i - median_diff))))
+    print(result)
+
     '''
     diff.sort()
     counter = collections.Counter(diff)
@@ -138,7 +146,7 @@ def main() -> None:
     df = df.drop('pullrequest_id', 1)
     df = df.drop('repo_id', 1)
     df = df.drop('repo_full_name', 1)
-    
+
     print(df.head())
     code_line = random.randint(0, shape[0])  # change this
     # code_line = 511
@@ -150,6 +158,7 @@ def main() -> None:
     if DEBUG: print(f'Diff : \n {df.loc[code_line]["diff"]}')
     
     weighted_word_count = weighted_word_frequency(df)
+    print(weighted_word_count)
 
 
 if __name__ == '__main__':
