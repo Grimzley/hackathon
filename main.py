@@ -7,7 +7,10 @@ LEGAL_CHARACTERS_NUMBERS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 DIFF_SEP = ','
 DEBUG = True
 
+
 def diff_check(input_string) -> list:
+    if len(input_string) < 2:
+        return [0, 0, 0, 0]
     ret_val = []
     removals_str = ''
     times_removed_str = ''
@@ -32,7 +35,7 @@ def diff_check(input_string) -> list:
     # Check for the end of the diff
     for i in range(start_of_diff + 2, end_of_diff):
         result_string = result_string + input_string[i]
-    if DEBUG: print(f'PARSED DIFF: {result_string}')
+    # if DEBUG: print(f'PARSED DIFF: {result_string}')
     # Get the number of removals and additions to the diff
     for i in result_string:
         if i not in LEGAL_CHARACTERS_NUMBERS:  # Skip characters not allowed to be in our diff count
@@ -43,7 +46,11 @@ def diff_check(input_string) -> list:
                 else:
                     parsing_additions = False
             elif i == '+':
-                parsing_times_removed = False
+                if parsing_removals:
+                    times_removed_str = '0'
+                    parsing_removals = False
+                else:
+                    parsing_times_removed = False
                 parsing_additions = True
         else:  # Use characters allowed in our diff count
             if parsing_removals:
@@ -55,13 +62,17 @@ def diff_check(input_string) -> list:
             else:  # Times added
                 times_added_str = times_added_str + i
     # Cast to integers
+
     removals = int(removals_str)
     ret_val.append(removals)
     times_removed = int(times_removed_str)
     ret_val.append(times_removed)
     additions = int(additions_str)
     ret_val.append(additions)
-    times_added = int(times_added_str)
+    if parsing_additions:
+        times_added = 0
+    else:
+        times_added = int(times_added_str)
     ret_val.append(times_added)
     return ret_val
 
@@ -73,7 +84,7 @@ def frequency(data):
     # clean data
     for index, message in enumerate(body):
         message = message.lower()
-        message = re.sub(r'[^a-zA-Z0-9]', ' ',message)
+        message = re.sub(r'[^a-z0-9]', ' ',message)
         message = message.split()
         body[index] = message
     
@@ -101,6 +112,7 @@ def main() -> None:
     
     print(df.head())
     code_line = random.randint(0, shape[0])  # change this
+    # code_line = 511
     if DEBUG: print(f'ORIGINAL HASH : \n {df.loc[code_line]["original_commit_hash"]}')
     if DEBUG: print(f'POST MERGE HASH : \n {df.loc[code_line]["post_merge_hash"]}')
     if DEBUG: print(f'Body : \n {df.loc[code_line]["body"]}')
@@ -108,9 +120,17 @@ def main() -> None:
     if DEBUG: print(f'Code : \n {df.loc[code_line]["code"]}')
     if DEBUG: print(f'Diff : \n {df.loc[code_line]["diff"]}')
 
-    diff = diff_check(input_string=df.loc[code_line]["diff"])
-    if DEBUG: print(diff)
-    
+    diff = 0
+    diff_i = 0
+    for i in range(shape[0]):
+        # print(df.loc[i]["diff"])
+        curr_diff = diff_check(input_string=df.loc[i]["diff"])
+        if curr_diff[0] + curr_diff[2] > diff:
+            diff = curr_diff[0] + curr_diff[2]
+            diff_i = i
+    if DEBUG: print(f' BIGGEST DIFF: {diff}, at index {diff_i}')
+
+    print(df.loc[diff_i]["body"])
     word_count = frequency(df)
     print(sum(word_count['the']))
 
