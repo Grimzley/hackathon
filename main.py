@@ -116,6 +116,7 @@ def weighted_word_frequency(data):
             weighted_word_count[word][index] += diff[index]
     
     weighted_word_count = {word: sum(weighted_word_count[word]) / sum(word_count[word]) for word in dictionary}
+    '''
     diff.sort()
     counter = collections.Counter(diff)
     print(list(counter.keys()))
@@ -125,6 +126,7 @@ def weighted_word_frequency(data):
     plt.xlabel('Num of changes in diff')
     plt.ylabel('Frequency')
     plt.show()
+    '''
     return weighted_word_count
 
 
