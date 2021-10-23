@@ -77,7 +77,7 @@ def diff_check(input_string) -> list:
     return ret_val
 
 
-def frequency(data):
+def weighted_word_frequency(data):
     dictionary = []
     body = data['body']
     
@@ -88,17 +88,34 @@ def frequency(data):
         message = message.split()
         body[index] = message
     
+    # get diff of all entries
+    diff = []
+    diff_count = 0
+    for i in range(data.shape[0]):
+        # print(df.loc[i]["diff"])
+        curr_diff = diff_check(input_string=data.loc[i]["diff"])
+        diff.append(curr_diff[0] + curr_diff[2])
+        diff_count += curr_diff[0] + curr_diff[2]
+    diff.sort()
+    avg_diff = diff_count / data.shape[0]  
+    
     # add words to dictionary
     for message in body:
         for word in message:
             dictionary.append(word)
     dictionary = list(set(dictionary)) # remove duplicate words
-    # count the number of occurences of each word in each body message
+    
+    # count the number of occurences of each word in each body message and add weights
     word_count = {word: [0] * len(body) for word in dictionary} # initialize word counts to 0
+    weighted_word_count = {word: [0] * len(body) for word in dictionary} # initialize weight counts to 0
     for index, message in enumerate(body):
         for word in message:
             word_count[word][index] += 1
-    return word_count
+            weighted_word_count[word][index] += diff[index]
+    
+    weighted_word_count = {word: sum(weighted_word_count[word]) / sum(word_count[word]) for word in dictionary}
+    
+    return weighted_word_count
 
 
 def main() -> None:
@@ -119,20 +136,8 @@ def main() -> None:
     if DEBUG: print(f'File Path : \n {df.loc[code_line]["file_path"]}')
     if DEBUG: print(f'Code : \n {df.loc[code_line]["code"]}')
     if DEBUG: print(f'Diff : \n {df.loc[code_line]["diff"]}')
-
-    diff = 0
-    diff_i = 0
-    for i in range(shape[0]):
-        # print(df.loc[i]["diff"])
-        curr_diff = diff_check(input_string=df.loc[i]["diff"])
-        if curr_diff[0] + curr_diff[2] > diff:
-            diff = curr_diff[0] + curr_diff[2]
-            diff_i = i
-    if DEBUG: print(f' BIGGEST DIFF: {diff}, at index {diff_i}')
-
-    print(df.loc[diff_i]["body"])
-    word_count = frequency(df)
-    print(sum(word_count['the']))
+    
+    weighted_word_count = weighted_word_frequency(df)
 
 
 if __name__ == '__main__':
