@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 import re
 import random
+import collections
+import matplotlib.pyplot as plt
 
 LEGAL_CHARACTERS_NUMBERS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 DIFF_SEP = ','
@@ -114,7 +116,15 @@ def weighted_word_frequency(data):
             weighted_word_count[word][index] += diff[index]
     
     weighted_word_count = {word: sum(weighted_word_count[word]) / sum(word_count[word]) for word in dictionary}
-    
+    diff.sort()
+    counter = collections.Counter(diff)
+    print(list(counter.keys()))
+    print(list(counter.values()))
+    plt.scatter(list(counter.keys())[7:-2], list(counter.values())[7:-2])
+    plt.title('Diffs w/ Outliers removed')
+    plt.xlabel('Num of changes in diff')
+    plt.ylabel('Frequency')
+    plt.show()
     return weighted_word_count
 
 
