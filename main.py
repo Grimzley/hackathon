@@ -209,6 +209,7 @@ def main() -> None:
                      1 / (1 + math.e ** ((-0.1) * (diffs_not_sorted[rand_sample_index] - median_diff))),
                      1 / (1 + math.e ** ((-0.008) * (weights_not_sorted[rand_sample_index] - mean_weights)))]
     print(random_sample)
+    print(f'FINAL SCORE: {math.floor(random_sample[1] * random_sample[2] * 100)}')
     print(f'Diff : \n {df.loc[random_sample[0]]["diff"]}')
 
 
