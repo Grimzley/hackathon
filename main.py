@@ -1,3 +1,5 @@
+import pickle
+
 import pandas as pd
 import numpy as np
 import re
@@ -5,6 +7,8 @@ import random
 import collections
 import matplotlib.pyplot as plt
 import math
+import copy
+import os
 
 LEGAL_CHARACTERS_NUMBERS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 DIFF_SEP = ','
@@ -117,12 +121,6 @@ def weighted_word_frequency(data):
             weighted_word_count[word][index] += diff[index]
     
     weighted_word_count = {word: sum(weighted_word_count[word]) / sum(word_count[word]) for word in dictionary}
-    median_diff = diff[math.floor(len(diff)/2) + 1]
-    print(median_diff)
-    result = []
-    for i in diff:
-        result.append(1 / (1 + math.e ** ((-0.1) * (i - median_diff))))
-    print(result)
 
     '''
     diff.sort()
@@ -135,6 +133,10 @@ def weighted_word_frequency(data):
     plt.ylabel('Frequency')
     plt.show()
     '''
+    filename = 'model.pkl'
+    outfile = open(filename, 'wb')
+    pickle.dump(weighted_word_count, outfile)
+    outfile.close()
     return weighted_word_count
 
 
@@ -148,7 +150,9 @@ def main() -> None:
     df = df.drop('repo_full_name', 1)
 
     print(df.head())
-    code_line = random.randint(0, shape[0])  # change this
+
+    random_sample = random.randint(0, shape[0])  # change this
+    '''
     # code_line = 511
     if DEBUG: print(f'ORIGINAL HASH : \n {df.loc[code_line]["original_commit_hash"]}')
     if DEBUG: print(f'POST MERGE HASH : \n {df.loc[code_line]["post_merge_hash"]}')
@@ -156,9 +160,56 @@ def main() -> None:
     if DEBUG: print(f'File Path : \n {df.loc[code_line]["file_path"]}')
     if DEBUG: print(f'Code : \n {df.loc[code_line]["code"]}')
     if DEBUG: print(f'Diff : \n {df.loc[code_line]["diff"]}')
-    
-    weighted_word_count = weighted_word_frequency(df)
-    print(weighted_word_count)
+    '''
+    if not os.path.exists('model.pkl'):
+        weighted_word_count = weighted_word_frequency(df)
+    else:
+        infile = open('model.pkl', 'rb')
+        weighted_word_count = pickle.load(infile)
+        infile.close()
+
+    print(f'RANDOM SAMPLE: {random_sample}')
+    # print(df.loc[random_sample[0]]["diff"])
+    # print(weighted_word_count)
+
+    # get diff of all entries
+    diff = []
+    diff_count = 0
+    for i in range(df.shape[0]):
+        # print(df.loc[i]["diff"])
+        curr_diff = diff_check(input_string=df.loc[i]["diff"])
+        diff.append(curr_diff[0] + curr_diff[2])
+        diff_count += curr_diff[0] + curr_diff[2]
+    diffs_not_sorted = copy.deepcopy(diff)
+    diff.sort()
+
+    avg_diff = diff_count / df.shape[0]
+
+    median_diff = diff[math.floor(len(diff) / 2) + 1]
+    result = []
+    for i in diff:
+        result.append(1 / (1 + math.e ** ((-0.1) * (i - median_diff))))  # Sigmoid function for diffs
+    weights = []
+    for i in weighted_word_count:  # Distribute weights across a sigmoid curve
+        weights.append(weighted_word_count[i])
+    weights_not_sorted = copy.deepcopy(weights)
+    weights.sort()
+    median_weights = weights[math.floor(len(weights) / 2)]
+    mean_weights = sum(weights) / len(weights)
+    print(f'Median: {median_weights}')
+    print(f'Mean: {mean_weights}')
+    weight_results = []
+    for i in weights:
+        weight_results.append(
+            1 / (1 + math.e ** ((-0.008) * (i - mean_weights))))  # Sigmoid function for word frequency
+    # print(weight_results)
+    rand_sample_index = random.randint(0, len(weights))
+    # random_sample = [rand_sample_index, diffs_not_sorted[rand_sample_index], weights_not_sorted[rand_sample_index]]
+    random_sample = [rand_sample_index,
+                     1 / (1 + math.e ** ((-0.1) * (diffs_not_sorted[rand_sample_index] - median_diff))),
+                     1 / (1 + math.e ** ((-0.008) * (weights_not_sorted[rand_sample_index] - mean_weights)))]
+    print(random_sample)
+    print(f'Diff : \n {df.loc[random_sample[0]]["diff"]}')
 
 
 if __name__ == '__main__':
